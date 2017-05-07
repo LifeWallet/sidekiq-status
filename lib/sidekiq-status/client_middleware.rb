@@ -21,6 +21,7 @@ module Sidekiq::Status
       initial_metadata = {
         jid: msg['jid'],
         status: :queued,
+        enqueued_at: Time.now.to_f,
         worker: worker_class,
         args: display_args(msg, queue)
       }

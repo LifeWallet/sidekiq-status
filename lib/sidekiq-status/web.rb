@@ -39,7 +39,7 @@ module Sidekiq::Status
         end
 
         def has_sort_by?(value)
-          ["worker", "status", "update_time", "pct_complete", "message"].include?(value)
+          ["worker", "status", "update_time", "pct_complete", "message", "enqueued_at"].include?(value)
         end
       end
 
@@ -55,15 +55,18 @@ module Sidekiq::Status
           @statuses << OpenStruct.new(status)
         end
 
-        sort_by = has_sort_by?(params[:sort_by]) ? params[:sort_by] : "update_time"
+        sort_by = has_sort_by?(params[:sort_by]) ? params[:sort_by] : "enqueued_at"
         sort_dir = "asc"
-
-        if params[:sort_dir] == "asc"
-          @statuses = @statuses.sort { |x,y| x.send(sort_by) <=> y.send(sort_by) }
-        else
-          sort_dir = "desc"
-          @statuses = @statuses.sort { |y,x| x.send(sort_by) <=> y.send(sort_by) }
-        end
+        #
+        # if params[:sort_dir] == "asc"
+        #   @statuses = @statuses.sort_by { |e| e.send(sort_by) }
+        # else
+        #   sort_dir = "desc"
+        #   @statuses = @statuses.sort { |y,x| x.send(sort_by) <=> y.send(sort_by) }
+        # end
+        @statuses = @statuses.sort_by {|e| [e.status, e.enqueued_at, e.args] }
+        @completed = @statuses.select{|e| e.status == 'complete'}
+        @statuses = (@statuses - @completed) + @completed if @completed.any?
 
         working_jobs = @statuses.select{|job| job.status == "working"}
         size = params[:size] ? params[:size].to_i : 25
