@@ -64,7 +64,7 @@ module Sidekiq::Status
         #   sort_dir = "desc"
         #   @statuses = @statuses.sort { |y,x| x.send(sort_by) <=> y.send(sort_by) }
         # end
-        @statuses = @statuses.sort_by {|e| [e.status, e.enqueued_at || 0, e.args || []] }
+        @statuses = @statuses.sort_by {|e| [e.status || "complete", e.enqueued_at.to_i, e.args || []] }
         @completed = @statuses.select{|e| e.status == 'complete'}
         @statuses = (@statuses - @completed) + @completed if @completed.any?
 
