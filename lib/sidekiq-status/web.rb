@@ -66,7 +66,9 @@ module Sidekiq::Status
         # end
         @statuses = @statuses.sort_by {|e| [e.status || "complete", e.enqueued_at.to_i, e.args || []] }
         @completed = @statuses.select{|e| e.status == 'complete'}
+        @queued = @statuses.select{|e| e.status == 'queued'}
         @statuses = (@statuses - @completed) + @completed if @completed.any?
+        @statuses = (@statuses - @queued) if @queued.any?
 
         working_jobs = @statuses.select{|job| job.status == "working"}
         size = params[:size] ? params[:size].to_i : 25
