@@ -52,7 +52,9 @@ module Sidekiq::Status
           status = Sidekiq::Status::get_all jid
           next if !status || status.count < 2
           status = add_details_to_status(status)
-          @statuses << OpenStruct.new(status)
+          if !%w(complete queued).include?(status)
+            @statuses << OpenStruct.new(status)
+          end
         end
 
         sort_by = has_sort_by?(params[:sort_by]) ? params[:sort_by] : "enqueued_at"
@@ -65,11 +67,11 @@ module Sidekiq::Status
         #   @statuses = @statuses.sort { |y,x| x.send(sort_by) <=> y.send(sort_by) }
         # end
         @statuses = @statuses.sort_by {|e| [e.status || "complete", e.enqueued_at.to_i, e.args || []] }
-        @completed = @statuses.select{|e| e.status == 'complete'}
-        @queued = @statuses.select{|e| e.status == 'queued'}
-        # remove queued and completed from the status page
-        @statuses = (@statuses - @completed) if @completed.any?
-        @statuses = (@statuses - @queued) if @queued.any?
+        # @completed = @statuses.select{|e| e.status == 'complete'}
+        # @queued = @statuses.select{|e| e.status == 'queued'}
+        # # remove queued and completed from the status page
+        # @statuses = (@statuses - @completed) if @completed.any?
+        # @statuses = (@statuses - @queued) if @queued.any?
 
         working_jobs = @statuses.select{|job| job.status == "working"}
         size = params[:size] ? params[:size].to_i : 25
@@ -84,7 +86,6 @@ module Sidekiq::Status
           { id: "worker", name: "Worker / JID", class: nil, url: nil},
           { id: "args", name: "Arguments", class: nil, url: nil},
           { id: "status", name: "Status", class: nil, url: nil},
-          { id: "update_time", name: "Last Updated", class: nil, url: nil},
           { id: "pct_complete", name: "Progress", class: nil, url: nil},
         ]
 
