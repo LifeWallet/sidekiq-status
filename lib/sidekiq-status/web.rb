@@ -67,11 +67,11 @@ module Sidekiq::Status
         #   @statuses = @statuses.sort { |y,x| x.send(sort_by) <=> y.send(sort_by) }
         # end
         @statuses = @statuses.sort_by {|e| [e.status || "complete", e.enqueued_at.to_i, e.args || []] }
-        # @completed = @statuses.select{|e| e.status == 'complete'}
-        # @queued = @statuses.select{|e| e.status == 'queued'}
+        @completed = @statuses.select{|e| e.status == 'complete'}
+        @queued = @statuses.select{|e| e.status == 'queued'}
         # # remove queued and completed from the status page
-        # @statuses = (@statuses - @completed) if @completed.any?
-        # @statuses = (@statuses - @queued) if @queued.any?
+        @statuses = (@statuses - @completed) if @completed.any?
+        @statuses = (@statuses - @queued) if @queued.any?
 
         working_jobs = @statuses.select{|job| job.status == "working"}
         size = params[:size] ? params[:size].to_i : 25
